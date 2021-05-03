@@ -117,13 +117,11 @@ class room:
 ##################
 
 def reset():
-    global map, pl, nemici, ENEMYCANATTACK
+    global map, pl, nemici
     
     map = DUNGEON[livello].copy()
     
     nemici = []
-    
-    ENEMYCANATTACK = 1
     
     pl.room = 0
     pl.Proom = 0
@@ -329,8 +327,6 @@ bigboi = ''
 game = True
 splash = 'try it!'
 
-
-
 while game:
     jen = True
     TitleScreen()
@@ -347,8 +343,6 @@ while game:
 
     #########
     
-    ENEMYCANATTACK = 0
-    ENEMYTIC = 0
     
     pl = player(int(w/2), int(h/2), 'Assets/skeletob.png')
 
@@ -477,17 +471,11 @@ while game:
                         if i.drop != []:
                             pl.inv.append(r.choice(i.drop))
                         pl.lvl += 0.1*i.index
-            if ENEMYCANATTACK:
-                if i.o.colliderect(pl.o) and not ATKED:
-                        i.o.x-=(40+pl.knockback)*r.choice([0,1])
-                        i.o.x-=(40+pl.knockback)*r.choice([0,1])
-                        pl.hp -= i.danno
-                        if pl.hp <= 0: GAMEOVER(); break
-            else:
-                ENEMYTIC += 1
-                if ENEMYTIC % 100 == 0:
-                    ENEMYCANATTACK = 1
-            
+            if i.o.colliderect(pl.o) and not ATKED:
+                    i.o.x-=(40+pl.knockback)*r.choice([0,1])
+                    i.o.x-=(40+pl.knockback)*r.choice([0,1])
+                    pl.hp -= i.danno
+                    if pl.hp <= 0: GAMEOVER(); break
         
         
         if ATKED or (ATKING and tic%ATKCOOL==0):
