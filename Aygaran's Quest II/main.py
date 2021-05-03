@@ -43,8 +43,9 @@ class player:
         self.spells = [
             SPELL('heal', 'restores 5 hp', 1, 0, g.image.load('Assets/heal.png')),
             SPELL('shockwave', 'fucks enemies around you', 3, 0, g.transform.scale(g.image.load('Assets/shock.png'), (800, 600))),
+            SPELL('Big Blood Magic Thing', 'turns 5 hp to 1 mana', 0, 1, g.image.load('Assets/hptmp.png'))
         ]
-        self.lvl = 0
+        self.lvl = 100000
         self.pointz = 0
         self.mana = 0
         self.maxhp = 20
@@ -81,6 +82,7 @@ class nemico:
         ]
         
         ##                                                            hitbox
+        self.index = mytype
         self.name, self.hp, self.spid, self.danno, self.die_on_hit,  self.l, self.drop = codex[int(mytype)] # ninni type è li
         self.o = g.Rect(x, y, self.l, self.l)
         self.img = g.transform.scale(g.image.load(f'Assets/{self.name}.png'), (self.l, self.l))
@@ -115,11 +117,13 @@ class room:
 ##################
 
 def reset():
-    global map, pl, nemici
+    global map, pl, nemici, ENEMYCANATTACK
     
     map = DUNGEON[livello].copy()
     
     nemici = []
+    
+    ENEMYCANATTACK = 1
     
     pl.room = 0
     pl.Proom = 0
@@ -190,20 +194,16 @@ def WIN():
     splash = 'iu uin'
     run = 1
 
-############ dungeon generation
-
-EXIT = 1
-
-with open('levels.py', 'r') as f:
-    exec(f.read())
-
-DUNGEON = GenDungeon(PossibleLevels, 5)
 
 
-#########
 
 def spell_menu(screen):
     pl.mana = round(pl.mana, 1)
+    
+    try:
+        LVL = str(pl.lvl).split(".")[0]+str(pl.lvl).split(".")[1][0]
+    except:
+        LVL = str(pl.lvl)
     
     actuel = pl.spells[pl.selected_spell]
     
@@ -215,7 +215,7 @@ def spell_menu(screen):
     menu.blit(font.render(f'requires mp: {actuel.cost}    lvl: {actuel.rlvl}', 0, (0, 200, 0)), (10, 50))
     
     menu.blit(font.render(f' |         you', 0, (0,200,0)), (400, 5))
-    menu.blit(font.render(f' |         mp: {pl.mana}    lvl: {pl.lvl}', 0, (0,200,0)), (400, 30))
+    menu.blit(font.render(f' |         mp: {pl.mana}    lvl: {LVL}', 0, (0,200,0)), (400, 30))
     menu.blit(font.render(f' |', 0, (0,200,0)), (400, 50))
     
     screen.blit(menu, (0, h-70))
@@ -239,6 +239,12 @@ def CAST(spell):
                     boi.hp -= 2
                     if boi.hp <= 0:
                         nemici.remove(boi)
+            
+            if actuel.name == 'Big Blood Magic Thing':
+                pl.mana += 5
+                pl.hp -= 1
+                if pl.hp <= 0:
+                    GAMEOVER()
 
 #######
 
@@ -279,10 +285,12 @@ def TitleScreen():
         mousebop.x, mousebop.y = g.mouse.get_pos()
         for ev in g.event.get():
             if ev.type == g.QUIT:
-                game = False
-                run = False
-                jen = False
-                break
+                if bigboi: bigboi = ''
+                else:
+                    game = False
+                    run = False
+                    jen = False
+                    break
             
             if ev.type == g.KEYDOWN and ev.key == g.K_x: bigboi = ''
             
@@ -321,9 +329,26 @@ bigboi = ''
 game = True
 splash = 'try it!'
 
+
+
 while game:
     jen = True
     TitleScreen()
+    
+    ############ dungeon generation
+
+    EXIT = 1
+
+    with open('levels.py', 'r') as f:
+        exec(f.read())
+
+    DUNGEON = GenDungeon(PossibleLevels, 5)
+
+
+    #########
+    
+    ENEMYCANATTACK = 0
+    ENEMYTIC = 0
     
     pl = player(int(w/2), int(h/2), 'Assets/skeletob.png')
 
@@ -451,11 +476,18 @@ while game:
                         pl.mana += 0.1
                         if i.drop != []:
                             pl.inv.append(r.choice(i.drop))
-            if i.o.colliderect(pl.o) and not ATKED:
-                    i.o.x-=(40+pl.knockback)*r.choice([0,1])
-                    i.o.x-=(40+pl.knockback)*r.choice([0,1])
-                    pl.hp -= i.danno
-                    if pl.hp <= 0: GAMEOVER(); break
+                        pl.lvl += 0.1*i.index
+            if ENEMYCANATTACK:
+                if i.o.colliderect(pl.o) and not ATKED:
+                        i.o.x-=(40+pl.knockback)*r.choice([0,1])
+                        i.o.x-=(40+pl.knockback)*r.choice([0,1])
+                        pl.hp -= i.danno
+                        if pl.hp <= 0: GAMEOVER(); break
+            else:
+                ENEMYTIC += 1
+                if ENEMYTIC % 100 == 0:
+                    ENEMYCANATTACK = 1
+            
         
         
         if ATKED or (ATKING and tic%ATKCOOL==0):
