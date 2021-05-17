@@ -8,6 +8,6 @@ def BOSS(hp):
             
         screen.fill((0,0,0))
         screen.blit(font.render('Work in progress, no boss for now :P', 0, (0,255,0)), (10,150))
-        clock.tic(10)
+        clock.tick(10)
     
     return 1,hp
