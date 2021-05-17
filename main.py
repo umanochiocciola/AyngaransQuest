@@ -406,7 +406,7 @@ while game:
     
     pl = player(int(w/2), int(h/2), 'Assets/skeletob.png')
 
-    livello = 2
+    livello = 0
     reset()
 
     exitrect = g.Rect(int(w/2)-15, int(h/2)-15, 50, 50)
